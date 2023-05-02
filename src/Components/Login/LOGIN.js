@@ -60,6 +60,7 @@ const LOGIN = () => {
           emailRef.current.value=''
           passwordRef.current.value=''
           setLoginSuccess(true)
+          localStorage.setItem('Token',data.idToken)
         } else {
           throw new Error();
         }
@@ -133,7 +134,7 @@ const LOGIN = () => {
           </div>
         </Form>
         {loginSuccess&&<Route>
-          <Redirect to='/WELCOME'/></Route>}
+          <Redirect to="/WELCOME"/></Route>}
       </div>
     </div>
   );
