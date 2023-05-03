@@ -1,6 +1,6 @@
 import React from "react";
 import LOGIN from "./Components/Login/LOGIN";
-import { Switch,Route } from "react-router-dom";
+import { Switch,Route, Redirect } from "react-router-dom";
 import WELCOME from "./Components/Welcome/WELCOME";
 import UserProvider from "./Components/Context/UserProvider";
 const App = () => {
@@ -13,6 +13,9 @@ const App = () => {
           </Route>
           <Route path="/WELCOME" exact>
             <WELCOME/>
+          </Route>
+          <Route path='*'>
+            <Redirect to='/'/>
           </Route>
         </Switch>
       </main>
