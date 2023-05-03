@@ -3,6 +3,7 @@ import { Navbar, Container, NavLink, Button } from "react-bootstrap";
 import { Route,Redirect } from "react-router-dom";
 import UserContext from "../Context/UserContext";
 import ProfileDisplay from "./ProfileDisplay";
+import ExpenseForm from "./ExpenseForm";
 const WELCOME = () => {
   const [verify,setVerify]=useState(false)
   const[logout,setLogout]=useState(false)
@@ -40,7 +41,8 @@ const WELCOME = () => {
   }
   return (
     <>
-      {localStorage.getItem('Token')!==null&&<Navbar
+      {localStorage.getItem('Token')!==null&&<>
+      <Navbar
         bg="dark"
         expand="sm"
         variant="dark"
@@ -61,7 +63,9 @@ const WELCOME = () => {
           <Button variant={verify?'success':'warning'} type='submit'onClick={verifyHandler}>{verify?'Verified':'Verify User'}</Button>
           <Button variant='danger' onClick={logoutHandler}>LOGOUT</Button>
         </Container>
-      </Navbar>}
+      </Navbar>
+      <ExpenseForm/>
+      </>}
       {ctx.updateProfile.profileButton && <ProfileDisplay />}
       {logout&&<Route><Redirect to='/'/></Route>}
       {localStorage.getItem('Token')==null&&<Route><Redirect to='/'/></Route>}
