@@ -2,10 +2,11 @@ import React from "react";
 import LOGIN from "./Components/Login/LOGIN";
 import { Switch,Route, Redirect } from "react-router-dom";
 import WELCOME from "./Components/Welcome/WELCOME";
-import UserProvider from "./Components/Context/UserProvider";
+import { Provider } from "react-redux";
+import store from "./Components/Store/store";
 const App = () => {
   return (
-    <UserProvider>
+    <Provider store={store}>
         <Switch>
           <Route path="/" exact>
             <LOGIN/>
@@ -17,7 +18,7 @@ const App = () => {
             <Redirect to='/'/>
           </Route>
         </Switch>
-    </UserProvider>
+    </Provider>
   );
 };
 

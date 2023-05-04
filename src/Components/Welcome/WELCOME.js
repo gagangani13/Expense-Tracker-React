@@ -1,30 +1,69 @@
-import React, { useState,useContext } from "react";
+import React, { useEffect, useState, } from "react";
 import { Navbar, Container, NavLink, Button } from "react-bootstrap";
 import { Route,Redirect } from "react-router-dom";
-import UserContext from "../Context/UserContext";
 import ProfileDisplay from "./ProfileDisplay";
 import ExpenseForm from "./ExpenseForm";
+import { useSelector,useDispatch } from "react-redux";
+import { authAction } from "../Store/authSlice";
+import { expenseAction } from "../Store/expenseSlice";
 const WELCOME = () => {
-  const [verify,setVerify]=useState(false)
-  const[logout,setLogout]=useState(false)
-  const ctx=useContext(UserContext)
-  function setProfileHandler() {
-    if(ctx.updateProfile.profileButton){
-      ctx.updateProfile.profileButtonFunction(false)
-    }else{
-      ctx.updateProfile.profileButtonFunction(true)
+  
+  useEffect(()=>{
+    const idToken=localStorage.getItem('idToken')
+    const userId=localStorage.getItem('userId')
+    if(idToken&&userId){
+      dispatch(authAction.loginHandler())
+      dispatch(authAction.setToken(idToken))
+      dispatch(authAction.setUserId(userId))
+      fromFirebase()
+    }
+    // eslint-disable-next-line 
+  },[])
+  async function fromFirebase() {
+    const userId=localStorage.getItem('userId')
+    const response = await fetch(
+      `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${userId}.json`
+    );
+    const data = await response.json();
+    try {
+      if (response.ok) {
+        let arr = [];
+        for (const item in data) {
+          arr.unshift({
+            amount: data[item].amount,
+            description: data[item].description,
+            category: data[item].category,
+            expenseId: item,
+          });
+        }
+        dispatch(expenseAction.reloadExpense(arr))
+      } else {
+        throw new Error();
+      }
+    } catch (error) {
+      alert(data.error.message);
     }
   }
+  const login=useSelector((state)=>state.authenticate.login)
+  const premium=useSelector((state)=>state.expenseList.premium)
+  const dispatch=useDispatch()
+  const [verify,setVerify]=useState(false)
+  const[profile,setProfile]=useState(false)
+
+  function setProfileHandler() {
+    setProfile(!profile)
+  }
   function logoutHandler(){
-    setLogout(true)
-    localStorage.removeItem('Token')
+    dispatch(authAction.logoutHandler())
+    localStorage.removeItem('idToken')
+    localStorage.removeItem('userId')
   }
   async function verifyHandler(e){
     if(!verify){
       e.preventDefault()
         const response=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,{
             method:'POST',
-            body:JSON.stringify({requestType:'VERIFY_EMAIL',idToken:localStorage.getItem('Token')})
+            body:JSON.stringify({requestType:'VERIFY_EMAIL',idToken:localStorage.getItem('idToken')})
         })
         const data=await response.json()
         try {
@@ -39,9 +78,10 @@ const WELCOME = () => {
         }
     }
   }
+
   return (
     <>
-      {localStorage.getItem('Token')!==null&&<>
+      {login&&<>
       <Navbar
         bg="dark"
         expand="sm"
@@ -61,14 +101,15 @@ const WELCOME = () => {
             </NavLink>
           </p>
           <Button variant={verify?'success':'warning'} type='submit'onClick={verifyHandler}>{verify?'Verified':'Verify User'}</Button>
+          {premium&&<Button variant='success' type='button'>Activate Premium</Button>}
           <Button variant='danger' onClick={logoutHandler}>LOGOUT</Button>
         </Container>
       </Navbar>
       <ExpenseForm/>
       </>}
-      {ctx.updateProfile.profileButton && <ProfileDisplay />}
-      {logout&&<Route><Redirect to='/'/></Route>}
-      {localStorage.getItem('Token')==null&&<Route><Redirect to='/'/></Route>}
+      {profile&& <ProfileDisplay profile={setProfileHandler} />}
+      {!login&&<Route><Redirect to='/'/></Route>}
+      {/* {localStorage.getItem('Token')==null&&<Route><Redirect to='/'/></Route>} */}
 </>
   );
 };

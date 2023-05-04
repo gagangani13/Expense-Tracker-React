@@ -1,13 +1,17 @@
 import { useRef,useState } from "react";
 import { Form, NavLink, Button, FloatingLabel } from "react-bootstrap";
+import { useDispatch, useSelector } from "react-redux";
 import { Route,Redirect } from "react-router-dom";
+import { authAction } from "../Store/authSlice";
 const LOGIN = () => {
+  const dispatch=useDispatch()
+  const loginState=useSelector((state)=>state.authenticate.login)
   const emailRef = useRef();
   const passwordRef = useRef();
   const confirmRef = useRef();
   const [login, setLogin] = useState(true);
   const[newPassword,setNewPassword]=useState(false)
-  const[loginSuccess,setLoginSuccess]=useState(false)
+
   function setLoginHandler() {
     if (login) {
       setLogin(false);
@@ -92,8 +96,11 @@ const LOGIN = () => {
         if (response.ok) {
           emailRef.current.value=''
           passwordRef.current.value=''
-          setLoginSuccess(true)
-          localStorage.setItem('Token',data.localId)
+          const token=localStorage.setItem('idToken',data.idToken)
+          const userId=localStorage.setItem('userId',data.localId)
+          dispatch(authAction.loginHandler())
+          dispatch(authAction.setToken(token))
+          dispatch(authAction.setUserId(userId))
           console.log(data);
         } else {
           throw new Error();
@@ -179,7 +186,7 @@ const LOGIN = () => {
             </NavLink>}
           </div>
         </Form>
-        {loginSuccess&&<Route>
+        {loginState&&<Route>
           <Redirect to="/WELCOME"/></Route>}
       </div>
     </div>

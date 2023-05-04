@@ -1,61 +1,29 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {  useRef, useState } from "react";
 import { Card, Form, Row, Col, Button } from "react-bootstrap";
+import { useDispatch, useSelector } from "react-redux";
+import { expenseAction } from "../Store/expenseSlice";
 const ExpenseForm = () => {
-  useEffect(() => {
-    fromFirebase();
-  }, []);
+  const dispatch=useDispatch()
+  const expenses=useSelector((state)=>state.expenseList.expenses)
+  const editing=useSelector((state)=>state.expenseList.editing)
+  const userId=useSelector((state)=>state.authenticate.userId)
 
-  async function fromFirebase() {
-    setLoad(true)
-    const response = await fetch(
-      `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${localStorage.getItem(
-        "Token"
-      )}.json`
-    );
-    const data = await response.json();
-    try {
-      if (response.ok) {
-        amountRef.current.value = "";
-        descriptionRef.current.value = "";
-        categoryRef.current.value = "";
-        console.log(data);
-        let arr = [];
-        for (const item in data) {
-          arr.unshift({
-            amount: data[item].amount,
-            description: data[item].description,
-            category: data[item].category,
-            Id: item,
-          });
-        }
-        setLoad(false)
-        setExpenses(arr);
-      } else {
-        throw new Error();
-      }
-    } catch (error) {
-      alert(data.error.message);
-    }
-  }
-
-  const [expenses, setExpenses] = useState([]);
   const[load,setLoad]=useState(false)
   const amountRef = useRef();
   const descriptionRef = useRef();
   const categoryRef = useRef();
+  let totalAmount=0
   async function addExpenses(e) {
     e.preventDefault();
     setLoad(true)
-    const details = {
+    let details = {
       amount: amountRef.current.value,
       description: descriptionRef.current.value,
       category: categoryRef.current.value,
     };
-    if (localStorage.getItem("EditKey") === null) {
+    if (editing===null) {
       const response = await fetch(
-        `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${localStorage.getItem(
-          "Token"
-        )}.json`,
+        `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${userId}.json`,
         {
           method: "POST",
           body: JSON.stringify(details),
@@ -65,10 +33,12 @@ const ExpenseForm = () => {
       try {
         setLoad(false)
         if (response.ok) {
+          details={...details,expenseId:data.name}
           amountRef.current.value = "";
           descriptionRef.current.value = "";
           categoryRef.current.value = "";
-          fromFirebase();
+          console.log(details);
+          dispatch(expenseAction.loadExpenses(details))
         } else {
           throw new Error();
         }
@@ -78,9 +48,7 @@ const ExpenseForm = () => {
       }
     } else {
       const response = await fetch(
-        `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${localStorage.getItem(
-          "Token"
-        )}/${localStorage.getItem("EditKey")}.json`,
+        `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${userId}/${editing}.json`,
         {
           method: "PUT",
           body: JSON.stringify(details),
@@ -93,8 +61,12 @@ const ExpenseForm = () => {
           amountRef.current.value = "";
           descriptionRef.current.value = "";
           categoryRef.current.value = "";
-          localStorage.removeItem("EditKey");
-          fromFirebase();
+          const editArray=expenses.filter((item)=>{
+            return item.expenseId!==editing 
+          })
+          editArray.unshift({...details,expenseId:editing})
+          dispatch(expenseAction.reloadExpense(editArray))
+          dispatch(expenseAction.editExpense(null))
         } else {
           throw new Error();
         }
@@ -107,19 +79,23 @@ const ExpenseForm = () => {
   async function deleteExpense(e) {
     setLoad(true)
     const key = e.target.parentElement.id;
+    console.log(userId,key)
     const response = await fetch(
-      `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${localStorage.getItem(
-        "Token"
-      )}/${key}.json`,
+      `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${userId}/${key}.json`,
       {
         method: "DELETE",
       }
     );
     const data = await response.json();
     try {
+      console.log(data);
         setLoad(false)
       if (response.ok) {
-        fromFirebase();
+        const deleteArray=expenses.filter((item)=>{
+          return item.expenseId!==key
+        })
+        console.log(deleteArray);
+        dispatch(expenseAction.reloadExpense(deleteArray))
       } else {
         throw new Error();
       }
@@ -131,9 +107,7 @@ const ExpenseForm = () => {
     setLoad(true)
     const key = e.target.parentElement.id;
     const response = await fetch(
-      `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${localStorage.getItem(
-        "Token"
-      )}/${key}.json`
+      `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${userId}/${key}.json`
     );
     const data = await response.json();
     try {
@@ -142,7 +116,7 @@ const ExpenseForm = () => {
         amountRef.current.value = data.amount;
         descriptionRef.current.value = data.description;
         categoryRef.current.value = data.category;
-        localStorage.setItem("EditKey", key);
+        dispatch(expenseAction.editExpense(key))
       } else {
         throw new Error();
       }
@@ -158,7 +132,9 @@ const ExpenseForm = () => {
           top: "10rem",
           width: "60%",
           left: "20%",
-          textAlignLast: 'center'
+          textAlignLast: 'center',
+          backgroundColor:'#bdcfc7',
+          margin:'5px'
         }}
         onSubmit={addExpenses}
       >
@@ -200,16 +176,24 @@ const ExpenseForm = () => {
           top: "20rem",
           width: "60%",
           left: "20%",
-          textAlignLast: 'center'
+          textAlignLast: 'center',
         }}
       >
         {load&&<h5>Loading...</h5>}
         {expenses.map((item) => {
+          totalAmount+=Number(item.amount);
+          if(totalAmount>=10000){
+            dispatch(expenseAction.setPremium(true))
+          }
+          else{
+            dispatch(expenseAction.setPremium(false))
+          }
           return (
-            <Card>
+            <Card className='mb-2'>
               <Card.Body
-                id={item.Id}
+                id={item.expenseId}
                 className="d-flex justify-content-around align-items-baseline"
+                style={{backgroundColor:'#bdcfc7',fontSize:'large',fontWeight:'bold'}}
               >
                 <Card.Text>Rs.{item.amount} </Card.Text>
                 <Card.Text>{item.description} </Card.Text>

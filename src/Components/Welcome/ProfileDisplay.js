@@ -1,18 +1,19 @@
-import React, { useContext, useRef } from "react";
+import React, {useRef } from "react";
 import { useEffect } from "react";
 import { Form, Row, Button, Col } from "react-bootstrap";
-import UserContext from "../Context/UserContext";
-const ProfileDisplay = () => {
+const ProfileDisplay = (props) => {
     useEffect(()=>{
         nameRef.current.value='Loading...'
         urlRef.current.value='Loading...'
         async function loadProfile() {
             const response=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,{
                 method:'POST',
-                body:JSON.stringify({idToken:localStorage.getItem('Token')})
+                body:JSON.stringify({idToken:localStorage.getItem('idToken')})
             })
             const data=await response.json()
             try {
+              nameRef.current.value=''
+              urlRef.current.value=''
                 if(response.ok){
                     console.log(data);
                     nameRef.current.value=data.users[0].displayName
@@ -31,21 +32,20 @@ const ProfileDisplay = () => {
 
     const nameRef=useRef()
     const urlRef=useRef()
-    const ctx=useContext(UserContext)
     function setProfileHandler() {
-        ctx.updateProfile.profileButtonFunction(false)
+        props.profile()
     }
     async function updateUser(e){
         e.preventDefault()
         const response=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,{
             method:'POST',
-            body:JSON.stringify({idToken:localStorage.getItem('Token'),displayName:nameRef.current.value,photoUrl:urlRef.current.value,returnSecureToken:true})
+            body:JSON.stringify({idToken:localStorage.getItem('idToken'),displayName:nameRef.current.value,photoUrl:urlRef.current.value,returnSecureToken:true})
         })
         const data=await response.json()
         try {
             if(response.ok){
                 alert('Updated')
-                ctx.updateProfile.profileButtonFunction(false)
+                props.profile()
             }else{
                 throw new Error()
             }
