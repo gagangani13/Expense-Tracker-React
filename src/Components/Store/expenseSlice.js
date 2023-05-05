@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-const initialExpense={expenses:[],editing:null,premium:false}
+const initialExpense={expenses:[],editing:null,premium:false,activatePremium:false}
 const expenseSlice=createSlice({
     name:'Expenses',
     initialState:initialExpense,
@@ -15,6 +15,9 @@ const expenseSlice=createSlice({
         },
         setPremium(state,action){
             state.premium=action.payload
+        },
+        setActivatePremium(state){
+            state.activatePremium=!state.activatePremium
         }
     }
 })

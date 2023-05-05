@@ -15,7 +15,7 @@ const App = () => {
             <WELCOME/>
           </Route>
           <Route path='*'>
-            <Redirect to='/'/>
+            <Redirect to='/WELCOME'/>
           </Route>
         </Switch>
     </Provider>
