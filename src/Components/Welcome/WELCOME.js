@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Navbar, Container, NavLink, Button, } from "react-bootstrap";
-// import { Link } from "react-router-dom";
 import { Route, Redirect } from "react-router-dom";
 import ProfileDisplay from "./ProfileDisplay";
 import ExpenseForm from "./ExpenseForm";
@@ -13,10 +12,14 @@ const WELCOME = () => {
   useEffect(() => {
     const idToken = localStorage.getItem("idToken");
     const userId = localStorage.getItem("userId");
+    const premium = localStorage.getItem("premium");
+    const activatePremium = localStorage.getItem("activatePremium");
     if (idToken && userId) {
       dispatch(authAction.loginHandler());
       dispatch(authAction.setToken(idToken));
       dispatch(authAction.setUserId(userId));
+      activatePremium&&dispatch(expenseAction.setActivatePremium(true))
+      premium&&dispatch(expenseAction.setPremium(true))
       fromFirebase();
     }
     // eslint-disable-next-line
@@ -62,14 +65,25 @@ const WELCOME = () => {
     dispatch(authAction.logoutHandler());
     localStorage.removeItem("idToken");
     localStorage.removeItem("userId");
+    localStorage.removeItem("premium");
+    localStorage.removeItem("activatePremium");
+    !light&&dispatch(themeAction.setLight())
+    activatePremium&&dispatch(expenseAction.setActivatePremium(false))
+    
   }
   function setTheme(){
       dispatch(themeAction.setLight())
   }
   function activation() {
-    dispatch(expenseAction.setActivatePremium())
     if(activatePremium && !light){
       dispatch(themeAction.setLight())
+    }
+    if(!activatePremium){
+      localStorage.setItem('activatePremium',true)
+      dispatch(expenseAction.setActivatePremium(true))
+    }else if(activatePremium){
+      localStorage.setItem('activatePremium',false)
+      dispatch(expenseAction.setActivatePremium(false))
     }
   }
   function downloadExpenses() {
@@ -82,6 +96,7 @@ const WELCOME = () => {
     Url=URL.createObjectURL(blob1)
   }
   activatePremium&&downloadExpenses()
+  !premium&&activatePremium&&activation()
   async function verifyHandler(e) {
     if (!verify) {
       e.preventDefault();
@@ -137,7 +152,7 @@ const WELCOME = () => {
               >
                 {verify ? "Verified" : "Verify User"}
               </Button>
-              {activatePremium&&<div>
+              {premium&&activatePremium&&<div>
                 <i class="fa-solid fa-sun fa-lg" style={{verticalAlign: 'middle'}}></i>
                 <label class="switch">
                   <input type="checkbox" onClick={setTheme} />
@@ -150,7 +165,7 @@ const WELCOME = () => {
                   {activatePremium? 'Deactivate Premium':'Activate Premium'}
                 </Button>
               )}
-              {activatePremium &&<a href={Url} download='Expenses.csv'><i class="fa-solid fa-download fa-lg" ></i></a>}
+              {premium&&activatePremium &&<a href={Url} download='Expenses.csv'><i class="fa-solid fa-download fa-lg" ></i></a>}
               <Button variant="danger" onClick={logoutHandler}>
                 LOGOUT
               </Button>
@@ -164,8 +179,7 @@ const WELCOME = () => {
         <Route>
           <Redirect to="/" />
         </Route>
-      )}
-      
+      )} 
     </>
     </>
   );

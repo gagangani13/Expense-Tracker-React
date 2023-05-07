@@ -16,8 +16,8 @@ const expenseSlice=createSlice({
         setPremium(state,action){
             state.premium=action.payload
         },
-        setActivatePremium(state){
-            state.activatePremium=!state.activatePremium
+        setActivatePremium(state,action){
+            state.activatePremium=action.payload
         }
     }
 })

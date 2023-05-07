@@ -180,9 +180,11 @@ const ExpenseForm = () => {
           totalAmount+=Number(item.amount);
           if(totalAmount>=10000){
             dispatch(expenseAction.setPremium(true))
+            localStorage.setItem('premium',true)
           }
           else{
             dispatch(expenseAction.setPremium(false))
+            localStorage.setItem('premium',false)
           }
           return (
             <Card className='mb-2'>
