@@ -6,7 +6,6 @@ import UserProvider from "./Components/Context/UserProvider";
 const App = () => {
   return (
     <UserProvider>
-      <main style={{ minHeight: "90vh" }}>
         <Switch>
           <Route path="/" exact>
             <LOGIN/>
@@ -18,7 +17,6 @@ const App = () => {
             <Redirect to='/'/>
           </Route>
         </Switch>
-      </main>
     </UserProvider>
   );
 };

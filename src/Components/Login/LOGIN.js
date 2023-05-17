@@ -6,12 +6,20 @@ const LOGIN = () => {
   const passwordRef = useRef();
   const confirmRef = useRef();
   const [login, setLogin] = useState(true);
+  const[newPassword,setNewPassword]=useState(false)
   const[loginSuccess,setLoginSuccess]=useState(false)
   function setLoginHandler() {
     if (login) {
       setLogin(false);
     } else {
       setLogin(true);
+    }
+  }
+  function setPasswordHandler() {
+    if(newPassword){
+      setNewPassword(false)
+    }else{
+      setNewPassword(true)
     }
   }
   async function addData(e) {
@@ -42,7 +50,32 @@ const LOGIN = () => {
       } else {
         alert("Password not matching");
       }
-    }else{
+    }else if(login&&newPassword){
+      const response = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            requestType:"PASSWORD_RESET",email:emailRef.current.value
+          }),
+        }
+      );
+      const data = await response.json();
+      try {
+        if (response.ok) {
+          alert('Email sent')
+          setNewPassword(false)
+          emailRef.current.value=''
+        } else {
+          throw new Error();
+        }
+      } catch (error) {
+        alert(data.error.message);
+      }
+    }
+    
+    
+    else{
       const response = await fetch(
         `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,
         {
@@ -80,10 +113,13 @@ const LOGIN = () => {
         border: "0 2px 5px solid black",
       }}
     >
-      <h1 style={{ backgroundColor: "darkgray" }} className="text-center mb-4">
-        {login ? "LOGIN" : "SIGN UP"}
+      <h1 style={{     backgroundColor: 'black',
+    color: 'aqua'}} className="text-center mb-4">
+        {!newPassword&&(login ? "LOGIN" : "SIGN UP")}
+        {newPassword&&"CHANGE PASSWORD"}
       </h1>
       <div className="container">
+      {newPassword&&"Enter the registered Email"}
         <Form className="d-grid" onSubmit={addData}>
           <FloatingLabel
             controlId="floatingInput"
@@ -97,7 +133,7 @@ const LOGIN = () => {
               required
             />
           </FloatingLabel>
-          <FloatingLabel
+          {!newPassword&&<FloatingLabel 
             controlId="floatingPassword"
             label="Password"
             className="mb-3"
@@ -108,7 +144,7 @@ const LOGIN = () => {
               ref={passwordRef}
               required
             />
-          </FloatingLabel>
+          </FloatingLabel>}
           {!login && (
             <FloatingLabel
               controlId="floatingInput"
@@ -123,14 +159,23 @@ const LOGIN = () => {
               />
             </FloatingLabel>
           )}
-          <Button className="mb-3" variant="primary" type="submit">
-            {login ? "LOGIN" : "SIGN UP"}
-          </Button>
-          <div className="d-flex justify-content-center">
-            {login ? "Don't have an account?" : "Already have an account?"}
-            <NavLink onClick={setLoginHandler}>
-              {!login ? "LOGIN" : "SIGN UP"}
+          {!newPassword&&login&&
+          <NavLink className="d-flex justify-content-center mb-3"  onClick={setPasswordHandler}>
+              Forgot Password ?
             </NavLink>
+          }
+          {!newPassword&&<Button className="mb-3" variant="primary" type="submit">
+            {login ? "LOGIN" : "SIGN UP"}
+          </Button>}
+          {newPassword&&<Button className="mb-3" variant="primary" type="submit">SEND LINK</Button>}
+          <div className="d-flex justify-content-center">
+            {!newPassword&&login ? "Don't have an account?" : "Already have an account?"}
+            {!newPassword&&<NavLink onClick={setLoginHandler}>
+              {!login ? "LOGIN" : "SIGN UP"}
+            </NavLink>}
+            {newPassword&&<NavLink onClick={setPasswordHandler}>
+              LOGIN
+            </NavLink>}
           </div>
         </Form>
         {loginSuccess&&<Route>
