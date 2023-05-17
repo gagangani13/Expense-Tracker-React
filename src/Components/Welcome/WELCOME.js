@@ -1,9 +1,11 @@
 import React, { useState,useContext } from "react";
 import { Navbar, Container, NavLink, Button } from "react-bootstrap";
+import { Route,Redirect } from "react-router-dom";
 import UserContext from "../Context/UserContext";
 import ProfileDisplay from "./ProfileDisplay";
 const WELCOME = () => {
   const [verify,setVerify]=useState(false)
+  const[logout,setLogout]=useState(false)
   const ctx=useContext(UserContext)
   function setProfileHandler() {
     if(ctx.updateProfile.profileButton){
@@ -11,6 +13,10 @@ const WELCOME = () => {
     }else{
       ctx.updateProfile.profileButtonFunction(true)
     }
+  }
+  function logoutHandler(){
+    setLogout(true)
+    localStorage.removeItem('Token')
   }
   async function verifyHandler(e){
     if(!verify){
@@ -34,7 +40,7 @@ const WELCOME = () => {
   }
   return (
     <>
-      <Navbar
+      {localStorage.getItem('Token')!==null&&<Navbar
         bg="dark"
         expand="sm"
         variant="dark"
@@ -53,10 +59,13 @@ const WELCOME = () => {
             </NavLink>
           </p>
           <Button variant={verify?'success':'warning'} type='submit'onClick={verifyHandler}>{verify?'Verified':'Verify User'}</Button>
+          <Button variant='danger' onClick={logoutHandler}>LOGOUT</Button>
         </Container>
-      </Navbar>
+      </Navbar>}
       {ctx.updateProfile.profileButton && <ProfileDisplay />}
-    </>
+      {logout&&<Route><Redirect to='/'/></Route>}
+      {localStorage.getItem('Token')==null&&<Route><Redirect to='/'/></Route>}
+</>
   );
 };
 
