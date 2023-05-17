@@ -1,7 +1,34 @@
 import React, { useContext, useRef } from "react";
+import { useEffect } from "react";
 import { Form, Row, Button, Col } from "react-bootstrap";
 import UserContext from "../Context/UserContext";
 const ProfileDisplay = () => {
+    useEffect(()=>{
+        nameRef.current.value='Loading...'
+        urlRef.current.value='Loading...'
+        async function loadProfile() {
+            const response=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,{
+                method:'POST',
+                body:JSON.stringify({idToken:localStorage.getItem('Token')})
+            })
+            const data=await response.json()
+            try {
+                if(response.ok){
+                    console.log(data);
+                    nameRef.current.value=data.users[0].displayName
+                    urlRef.current.value=data.users[0].photoUrl
+                }else{
+                    throw new Error()
+                }
+                
+            } catch (error) {
+                alert(data.error.message)
+            }
+        }
+        loadProfile()
+        // eslint-disable-next-line
+    },[])
+
     const nameRef=useRef()
     const urlRef=useRef()
     const ctx=useContext(UserContext)
