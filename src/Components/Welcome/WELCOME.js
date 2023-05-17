@@ -1,26 +1,28 @@
-import React, { useEffect, useState, } from "react";
-import { Navbar, Container, NavLink, Button } from "react-bootstrap";
-import { Route,Redirect } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Navbar, Container, NavLink, Button, } from "react-bootstrap";
+// import { Link } from "react-router-dom";
+import { Route, Redirect } from "react-router-dom";
 import ProfileDisplay from "./ProfileDisplay";
 import ExpenseForm from "./ExpenseForm";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { authAction } from "../Store/authSlice";
 import { expenseAction } from "../Store/expenseSlice";
+import "./toggleSwitch.css";
+import { themeAction } from "../Store/themeSlice";
 const WELCOME = () => {
-  
-  useEffect(()=>{
-    const idToken=localStorage.getItem('idToken')
-    const userId=localStorage.getItem('userId')
-    if(idToken&&userId){
-      dispatch(authAction.loginHandler())
-      dispatch(authAction.setToken(idToken))
-      dispatch(authAction.setUserId(userId))
-      fromFirebase()
+  useEffect(() => {
+    const idToken = localStorage.getItem("idToken");
+    const userId = localStorage.getItem("userId");
+    if (idToken && userId) {
+      dispatch(authAction.loginHandler());
+      dispatch(authAction.setToken(idToken));
+      dispatch(authAction.setUserId(userId));
+      fromFirebase();
     }
-    // eslint-disable-next-line 
-  },[])
+    // eslint-disable-next-line
+  }, []);
   async function fromFirebase() {
-    const userId=localStorage.getItem('userId')
+    const userId = localStorage.getItem("userId");
     const response = await fetch(
       `https://signup-and-authenticatio-f712f-default-rtdb.firebaseio.com/Users/${userId}.json`
     );
@@ -36,7 +38,7 @@ const WELCOME = () => {
             expenseId: item,
           });
         }
-        dispatch(expenseAction.reloadExpense(arr))
+        dispatch(expenseAction.reloadExpense(arr));
       } else {
         throw new Error();
       }
@@ -44,73 +46,128 @@ const WELCOME = () => {
       alert(data.error.message);
     }
   }
-  const login=useSelector((state)=>state.authenticate.login)
-  const premium=useSelector((state)=>state.expenseList.premium)
-  const dispatch=useDispatch()
-  const [verify,setVerify]=useState(false)
-  const[profile,setProfile]=useState(false)
-
+  const login = useSelector((state) => state.authenticate.login);
+  const premium = useSelector((state) => state.expenseList.premium);
+  const light= useSelector((state) => state.theme.light);
+  const activatePremium= useSelector((state) => state.expenseList.activatePremium);
+  const expenses= useSelector((state) => state.expenseList.expenses);
+  const dispatch = useDispatch();
+  const [verify, setVerify] = useState(false);
+  const [profile, setProfile] = useState(false);
+  let Url;
   function setProfileHandler() {
-    setProfile(!profile)
+    setProfile(!profile);
   }
-  function logoutHandler(){
-    dispatch(authAction.logoutHandler())
-    localStorage.removeItem('idToken')
-    localStorage.removeItem('userId')
+  function logoutHandler() {
+    dispatch(authAction.logoutHandler());
+    localStorage.removeItem("idToken");
+    localStorage.removeItem("userId");
   }
-  async function verifyHandler(e){
-    if(!verify){
-      e.preventDefault()
-        const response=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,{
-            method:'POST',
-            body:JSON.stringify({requestType:'VERIFY_EMAIL',idToken:localStorage.getItem('idToken')})
-        })
-        const data=await response.json()
-        try {
-            if(response.ok){
-                setVerify(true)
-            }else{
-                throw new Error()
-            }
-            
-        } catch (error) {
-            alert(data.error.message)
+  function setTheme(){
+      dispatch(themeAction.setLight())
+  }
+  function activation() {
+    dispatch(expenseAction.setActivatePremium())
+    if(activatePremium && !light){
+      dispatch(themeAction.setLight())
+    }
+  }
+  function downloadExpenses() {
+    const makeCsv=expenses.map((item)=>{
+      return [item.amount,item.description,item.category].join('-')
+    })
+    makeCsv.unshift(['Amount','Description','Category'].join('-'))
+    console.log(makeCsv)
+    const blob1=new Blob([makeCsv])
+    Url=URL.createObjectURL(blob1)
+  }
+  activatePremium&&downloadExpenses()
+  async function verifyHandler(e) {
+    if (!verify) {
+      e.preventDefault();
+      const response = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            requestType: "VERIFY_EMAIL",
+            idToken: localStorage.getItem("idToken"),
+          }),
         }
+      );
+      const data = await response.json();
+      try {
+        if (response.ok) {
+          setVerify(true);
+        } else {
+          throw new Error();
+        }
+      } catch (error) {
+        alert(data.error.message);
+      }
     }
   }
 
   return (
     <>
-      {login&&<>
-      <Navbar
-        bg="dark"
-        expand="sm"
-        variant="dark"
-        className="position-fixed w-100 text-l"
-        style={{ zIndex: "5", color: "white" }}
-      >
-        <Container>
-          <h1>Welcome To Expense Tracker</h1>
-          <p
-            className="d-grid"
-            style={{ gridTemplateColumns: "auto auto", gridColumnGap: "5px" }}
+    <div style={{   backgroundColor: light?'#dbe4e7':'currentcolor',
+      height: '100vh',
+      position: 'fixed',
+      width: '100vw',}}>
+    </div>
+    <>
+      {login && (
+        <>
+          <Navbar
+            expand="sm"
+            variant="dark"
+            className="position-fixed w-100 text-l"
+            style={{ zIndex: "5", border: "solid" ,color:light?'black':'white',backgroundColor:light?'#bdcfc7':'black'}}
           >
-            Your profile is incomplete{" "}
-            <NavLink style={{ color: "blue" }} onClick={setProfileHandler}>
-              Complete now
-            </NavLink>
-          </p>
-          <Button variant={verify?'success':'warning'} type='submit'onClick={verifyHandler}>{verify?'Verified':'Verify User'}</Button>
-          {premium&&<Button variant='success' type='button'>Activate Premium</Button>}
-          <Button variant='danger' onClick={logoutHandler}>LOGOUT</Button>
-        </Container>
-      </Navbar>
-      <ExpenseForm/>
-      </>}
-      {profile&& <ProfileDisplay profile={setProfileHandler} />}
-      {!login&&<Route><Redirect to='/'/></Route>}
-      {/* {localStorage.getItem('Token')==null&&<Route><Redirect to='/'/></Route>} */}
-</>
+            <Container>
+              <h1>Welcome To Expense Tracker</h1>
+
+              <NavLink style={{ color: light?"blue":'white' }} onClick={setProfileHandler}>
+                View Profile
+              </NavLink>
+              <Button
+                variant={verify ? "success" : "warning"}
+                type="submit"
+                onClick={verifyHandler}
+              >
+                {verify ? "Verified" : "Verify User"}
+              </Button>
+              {activatePremium&&<div>
+                <i class="fa-solid fa-sun fa-lg" style={{verticalAlign: 'middle'}}></i>
+                <label class="switch">
+                  <input type="checkbox" onClick={setTheme} />
+                  <span class="slider round"></span>
+                </label>
+                <i class="fa-solid fa-moon fa-lg" style={{verticalAlign: 'middle'}}></i>
+              </div>}
+              {premium && (
+                <Button variant="success" type="button" onClick={activation}>
+                  {activatePremium? 'Deactivate Premium':'Activate Premium'}
+                </Button>
+              )}
+              {activatePremium &&<a href={Url} download='Expenses.csv'><i class="fa-solid fa-download fa-lg" ></i></a>}
+              <Button variant="danger" onClick={logoutHandler}>
+                LOGOUT
+              </Button>
+            </Container>
+          </Navbar>
+          <ExpenseForm />
+        </>
+      )}
+      {profile && <ProfileDisplay profile={setProfileHandler} />}
+      {!login && (
+        <Route>
+          <Redirect to="/" />
+        </Route>
+      )}
+      
+    </>
+    </>
   );
 };
 

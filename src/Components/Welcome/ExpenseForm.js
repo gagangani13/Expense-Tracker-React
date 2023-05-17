@@ -7,7 +7,7 @@ const ExpenseForm = () => {
   const expenses=useSelector((state)=>state.expenseList.expenses)
   const editing=useSelector((state)=>state.expenseList.editing)
   const userId=useSelector((state)=>state.authenticate.userId)
-
+  const light= useSelector((state) => state.theme.light);
   const[load,setLoad]=useState(false)
   const amountRef = useRef();
   const descriptionRef = useRef();
@@ -125,16 +125,20 @@ const ExpenseForm = () => {
     }
   }
   return (
-    <>
+    <div style={{
+      position: "absolute",
+      top: "8rem",
+      width: "70%",
+      left: "15%",
+      textAlignLast: 'center',
+    }}>
       <Form
         style={{
-          position: "relative",
-          top: "10rem",
-          width: "60%",
-          left: "20%",
-          textAlignLast: 'center',
-          backgroundColor:'#bdcfc7',
-          margin:'5px'
+          margin:'2rem 0rem',
+          backgroundColor:light?'#bdcfc7':'rgb(88 94 92)',
+          padding: '2rem 0rem',
+          borderRadius: '1rem',
+          color:light?'black':'white'
         }}
         onSubmit={addExpenses}
       >
@@ -170,15 +174,7 @@ const ExpenseForm = () => {
           </Col>
         </Row>
       </Form>
-      <div
-        style={{
-          position: "relative",
-          top: "20rem",
-          width: "60%",
-          left: "20%",
-          textAlignLast: 'center',
-        }}
-      >
+      <>
         {load&&<h5>Loading...</h5>}
         {expenses.map((item) => {
           totalAmount+=Number(item.amount);
@@ -193,7 +189,7 @@ const ExpenseForm = () => {
               <Card.Body
                 id={item.expenseId}
                 className="d-flex justify-content-around align-items-baseline"
-                style={{backgroundColor:'#bdcfc7',fontSize:'large',fontWeight:'bold'}}
+                style={{backgroundColor:light?'#bdcfc7':'rgb(88 94 92)',fontSize:'larger',fontWeight:'bold',color:light?'black':'white'}}
               >
                 <Card.Text>Rs.{item.amount} </Card.Text>
                 <Card.Text>{item.description} </Card.Text>
@@ -216,8 +212,8 @@ const ExpenseForm = () => {
             </Card>
           );
         })}
-      </div>
-    </>
+      </>
+    </div>
   );
 };
 
