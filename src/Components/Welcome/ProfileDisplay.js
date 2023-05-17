@@ -1,14 +1,16 @@
 import React, {useRef } from "react";
 import { useEffect } from "react";
 import { Form, Row, Button, Col } from "react-bootstrap";
+import { useSelector } from "react-redux";
 const ProfileDisplay = (props) => {
+  const idToken=useSelector((state)=>state.authenticate.idToken)
     useEffect(()=>{
         nameRef.current.value='Loading...'
         urlRef.current.value='Loading...'
         async function loadProfile() {
             const response=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,{
                 method:'POST',
-                body:JSON.stringify({idToken:localStorage.getItem('idToken')})
+                body:JSON.stringify({idToken:idToken})
             })
             const data=await response.json()
             try {
@@ -38,10 +40,11 @@ const ProfileDisplay = (props) => {
     async function updateUser(e){
         e.preventDefault()
         const response=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyBXPzqlI6fvUIQX7LiIqUK-vdC_dfWQ0q8`,{
-            method:'POST',
-            body:JSON.stringify({idToken:localStorage.getItem('idToken'),displayName:nameRef.current.value,photoUrl:urlRef.current.value,returnSecureToken:true})
+          method:'POST',
+          body:JSON.stringify({idToken:idToken,displayName:nameRef.current.value,photoUrl:urlRef.current.value,returnSecureToken:true})
         })
         const data=await response.json()
+        console.log(data)
         try {
             if(response.ok){
                 alert('Updated')

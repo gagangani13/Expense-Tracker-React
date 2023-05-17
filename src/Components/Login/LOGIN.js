@@ -44,7 +44,11 @@ const LOGIN = () => {
         const data = await response.json();
         try {
           if (response.ok) {
+            emailRef.current.value=''
+            passwordRef.current.value=''
+            confirmRef.current.value=''
             alert("User added");
+            setLogin(true)
           } else {
             throw new Error();
           }
