@@ -4,9 +4,10 @@ import { Switch,Route } from "react-router-dom";
 import Footer from "./Components/Footer";
 import Header from "./Components/Header";
 import WELCOME from "./Components/Welcome/WELCOME";
+import UserProvider from "./Components/Context/UserProvider";
 const App = () => {
   return (
-    <>
+    <UserProvider>
       <Header />
       <main style={{ minHeight: "90vh" }}>
         <Switch>
@@ -19,7 +20,7 @@ const App = () => {
         </Switch>
       </main>
       <Footer />
-    </>
+    </UserProvider>
   );
 };
 
