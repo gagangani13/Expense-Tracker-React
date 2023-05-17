@@ -93,7 +93,8 @@ const LOGIN = () => {
           emailRef.current.value=''
           passwordRef.current.value=''
           setLoginSuccess(true)
-          localStorage.setItem('Token',data.idToken)
+          localStorage.setItem('Token',data.localId)
+          console.log(data);
         } else {
           throw new Error();
         }
